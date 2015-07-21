@@ -6,7 +6,7 @@ model:add(nn.Linear(10, 10))
 model:add(nn.Tanh())
 
 local diskClones = cloneThroughTimeDisk(model, 4)
-local cloneClones = cloneThroughTimeClone(model, 4)
+local clones = cloneThroughTime(model, 4)
 
 local newVal = 10
 model:parameters()[1][1][1] = newVal
