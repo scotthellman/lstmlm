@@ -1,14 +1,5 @@
---function cloneThroughTime(net, n)
---    local clones = {}
---    for t = 1, n do
---        clones[t] = net:clone()
---        
---    end
---end
-
-function cloneThroughTimeClone(net, n)
+function cloneThroughTime(net, n)
     local clones = {}
-
     local params, gradParams
     if net.parameters then
         params, gradParams = net:parameters()
@@ -17,34 +8,16 @@ function cloneThroughTimeClone(net, n)
         end
     end
 
-    --[[
-    local paramsNoGrad
-    if net.parametersNoGrad then
-        paramsNoGrad = net:parametersNoGrad()
-    end
-    --]]
-
+    --for each timestep, clone the network
     for t = 1, n do
-        local clone = net:clone()
-
+        clones[t] = net:clone()
         if net.parameters then
-            local cloneParams, cloneGradParams = clone:parameters()
-            local cloneParamsNoGrad
+            local cloneParams, cloneGradParams = clones[t]:parameters()
             for i = 1, #params do
                 cloneParams[i]:set(params[i])
                 cloneGradParams[i]:set(gradParams[i])
             end
-            --[[
-            if paramsNoGrad then
-                cloneParamsNoGrad = clone:parametersNoGrad()
-                for i =1,#paramsNoGrad do
-                    cloneParamsNoGrad[i]:set(paramsNoGrad[i])
-                end
-            end
-            --]]
         end
-
-        clones[t] = clone
         collectgarbage()
     end
 
