@@ -12,4 +12,4 @@ local newVal = 10
 model:parameters()[1][1][1] = newVal
 
 assert(diskClones[1]:parameters()[1][1][1] == newVal)
-assert(cloneClones[1]:parameters()[1][1][1] == newVal)
+assert(clones[1]:parameters()[1][1][1] == newVal)
