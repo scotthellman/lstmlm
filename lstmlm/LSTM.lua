@@ -1,6 +1,9 @@
 --[[ 
 Long Short-Term Memory unit, shamelessly stolen from https://github.com/karpathy/char-rnn
 --]]
+
+require 'lstmlm.util'
+
 local LSTM = {}
 function LSTM.lstm(input_size, rnn_size, num_layers, dropout)
   dropout = dropout or 0 
