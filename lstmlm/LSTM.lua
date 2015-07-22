@@ -8,8 +8,8 @@ local LSTM = {}
 function LSTM.lstm(input_size, rnn_size, num_layers, dropout)
   dropout = dropout or 0 
 
-  -- there will be 2*n+1 inputs
-  -- 2n because each layer will take in its internal state and output from the previous timestep.
+  -- there will be 2*num_layers+1 inputs
+  -- 2*num_layers because each layer will take in its internal state and output from the previous timestep.
   -- +1 because of the actual input to the whole network
   local inputs = {}
   table.insert(inputs, nn.Identity()()) -- the initial input to the network
@@ -45,22 +45,25 @@ function LSTM.lstm(input_size, rnn_size, num_layers, dropout)
     local in2h = nn.Linear(input_size_L, 4 * rnn_size)(input)
     local out2h = nn.Linear(rnn_size, 4 * rnn_size)(prev_output)
     local all_input_sums = nn.CAddTable()({in2h, out2h})
+
     -- undo the concatenation to extract the output of the gates
+    -- input, forget, and output gate all use sigmoids, so run them all at once too
     local sigmoid_chunk = nn.Narrow(2, 1, 3 * rnn_size)(all_input_sums)
     sigmoid_chunk = nn.Sigmoid()(sigmoid_chunk)
     local in_gate = nn.Narrow(2, 1, rnn_size)(sigmoid_chunk)
     local forget_gate = nn.Narrow(2, rnn_size + 1, rnn_size)(sigmoid_chunk)
     local out_gate = nn.Narrow(2, 2 * rnn_size + 1, rnn_size)(sigmoid_chunk)
-    -- decode the write inputs
+    -- in_transform is handled separately because it uses Tanh
     local in_transform = nn.Narrow(2, 3 * rnn_size + 1, rnn_size)(all_input_sums)
     in_transform = nn.Tanh()(in_transform)
 
-    -- perform the LSTM update
-    local next_state           = nn.CAddTable()({
+    -- to get the new LSTM state, gate the input, and add in the gated memory
+    local next_state = nn.CAddTable()({
         nn.CMulTable()({forget_gate, prev_state}),
-        nn.CMulTable()({in_gate,     in_transform})
+        nn.CMulTable()({in_gate, in_transform})
       })
-    -- gated cells form the output
+
+    -- Tanh and gate our new state to get our new output
     local next_output = nn.CMulTable()({out_gate, nn.Tanh()(next_state)})
 
     table.insert(outputs, next_state)
