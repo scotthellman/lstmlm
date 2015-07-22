@@ -39,9 +39,9 @@ function LSTM.lstm(input_size, rnn_size, num_layers, dropout)
     -- where x is the current layer's input and h is the layer's previous output.
     -- so here, the various xs and hs have been concatenated, allowing us to compute
     -- everything in one go
-    local i2h = nn.Linear(input_size_L, 4 * rnn_size)(input)
+    local in2h = nn.Linear(input_size_L, 4 * rnn_size)(input)
     local out2h = nn.Linear(rnn_size, 4 * rnn_size)(prev_output)
-    local all_input_sums = nn.CAddTable()({i2h, out2h})
+    local all_input_sums = nn.CAddTable()({in2h, out2h})
     -- undo the concatenation to extract the output of the gates
     local sigmoid_chunk = nn.Narrow(2, 1, 3 * rnn_size)(all_input_sums)
     sigmoid_chunk = nn.Sigmoid()(sigmoid_chunk)
@@ -58,8 +58,8 @@ function LSTM.lstm(input_size, rnn_size, num_layers, dropout)
         nn.CMulTable()({in_gate,     in_transform})
       })
     -- gated cells form the output
-    local next_output = nn.CMulTable()({out_gate, nn.Tanh()(next_c)})
-    
+    local next_output = nn.CMulTable()({out_gate, nn.Tanh()(next_state)})
+
     table.insert(outputs, next_state)
     table.insert(outputs, next_output)
   end
